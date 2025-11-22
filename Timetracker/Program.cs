@@ -1,6 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 const string fileName = "Arbeitszeit.json";
@@ -105,7 +103,6 @@ void CheckRestPeriod(DateTime start)
     Environment.Exit(-1);
 }
 
-
 internal class Day
 {
     public DateTime Start { get; }
@@ -128,11 +125,3 @@ internal class Day
         return End - Start;
     }
 }
-
-
-
-//TODO 
-// Mehrere Zeiten pro Tag
-// Pausenausgabe was eingetragen werden muss
-// Config mit format directory, datei etc
-// Parametisierter start (--help etc.)
