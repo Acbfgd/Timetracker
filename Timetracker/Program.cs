@@ -38,12 +38,10 @@ if (today is null)
 else
 {
     //Stop work day
-    today.End = DateTime.Now.AddHours(3);
+    today.End = DateTime.Now;
     File.WriteAllText(file, JsonSerializer.Serialize(days, new JsonSerializerOptions { WriteIndented = true }));
 
-
     var work = today.GetWorkingHours();
-
 
     Console.Write("You worked ");
     Console.ForegroundColor = ConsoleColor.DarkGreen;
@@ -51,11 +49,12 @@ else
     Console.ForegroundColor = ConsoleColor.White;
     Console.WriteLine(" hours today");
 
-
     CalculateBreak(today);
 }
 
 Console.ForegroundColor = ConsoleColor.White;
+
+Console.ReadKey();
 Environment.Exit(0);
 return;
 
@@ -100,6 +99,8 @@ void CheckRestPeriod(DateTime start)
     Console.WriteLine($"Rest period is only {restPeriod.Hours}:{restPeriod.Minutes}!");
     Console.WriteLine($"You can only start work at {yesterday.End.AddHours(restPeriodHours)}");
     Console.ForegroundColor = ConsoleColor.White;
+
+    Console.ReadKey();
     Environment.Exit(-1);
 }
 
