@@ -1,108 +1,27 @@
-﻿using System.Text.Json;
+﻿using Spectre.Console.Cli;
 using System.Text.Json.Serialization;
+using Timetracker.Commands;
 
-const string fileName = "Arbeitszeit.json";
-const double restPeriodHours = 11.0;
-
-var dir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-var file = Path.Combine(dir, fileName);
-
-
-
-var files = Directory.GetFiles(dir);
-
-if (!files.Contains(file))
+var app = new CommandApp();
+app.Configure(config =>
 {
-    File.WriteAllText(file, "[]");
-}
+    config.AddCommand<ListCommand>("list")
+        .WithAlias("l")
+        .WithDescription("lists all existing working days")
+        .WithExample("l", "list");
 
-var text = File.ReadAllText(file);
-var days = JsonSerializer.Deserialize<List<Day>>(text);
+    config.AddCommand<StartCommand>("start")
+        .WithAlias("s")
+        .WithDescription("start tracking your work day")
+        .WithExample("s", "start");
 
-var today = days.FirstOrDefault(d => d.Start.Day == DateTime.Today.Day);
+    config.AddCommand<EndCommand>("end")
+        .WithAlias("e")
+        .WithDescription("end your work day")
+        .WithExample("e", "end");
+});
 
-if (today is null)
-{
-    //start work
-    var t = new Day();
-
-    CheckRestPeriod(t.Start);
-
-    days.Add(t);
-    File.WriteAllText(file, JsonSerializer.Serialize(days, new JsonSerializerOptions { WriteIndented = true }));
-
-    Console.Write("Started working at ");
-    Console.ForegroundColor = ConsoleColor.DarkGreen;
-    Console.WriteLine(t.Start.ToString("HH:mm dd.MM.yyyy"));
-}
-else
-{
-    //Stop work day
-    today.End = DateTime.Now;
-    File.WriteAllText(file, JsonSerializer.Serialize(days, new JsonSerializerOptions { WriteIndented = true }));
-
-    var work = today.GetWorkingHours();
-
-    Console.Write("You worked ");
-    Console.ForegroundColor = ConsoleColor.DarkGreen;
-    Console.Write($"{work:hh\\:mm}");
-    Console.ForegroundColor = ConsoleColor.White;
-    Console.WriteLine(" hours today");
-
-    CalculateBreak(today);
-}
-
-Console.ForegroundColor = ConsoleColor.White;
-
-Console.ReadKey();
-Environment.Exit(0);
-return;
-
-void CalculateBreak(Day day)
-{
-
-    var work = day.GetWorkingHours();
-    var breakTime = 0;
-    switch (work.TotalHours)
-    {
-        case <= 6.0:
-            breakTime = 0;
-            break;
-        case <= 9.0:
-            breakTime = 30;
-            break;
-        default:
-            breakTime = 45;
-            break;
-    }
-
-    Console.WriteLine("==================================================");
-    Console.WriteLine($"You must take a break of at least {breakTime} minutes");
-}
-
-void CheckRestPeriod(DateTime start)
-{
-    var yesterday = days.FirstOrDefault(d => d.Start.Day == (DateTime.Today.Day - 1));
-    if (yesterday is null)
-    {
-        return;
-    }
-
-    var restPeriod = start - yesterday.End;
-
-    if (restPeriod.TotalHours >= restPeriodHours)
-    {
-        return;
-    }
-
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine($"Rest period is only {restPeriod.Hours}:{restPeriod.Minutes}!");
-    Console.WriteLine($"You can only start work at {yesterday.End.AddHours(restPeriodHours)}");
-    Console.ForegroundColor = ConsoleColor.White;
-
-    Console.ReadKey();
-    Environment.Exit(-1);
-}
+return app.Run(args);
 
 internal class Day
 {
@@ -125,4 +44,8 @@ internal class Day
     {
         return End - Start;
     }
+
+    public override string ToString()
+        => $"{Start:ddd dd.MM.yy}\t{Start:HH:mm} - {End:HH:mm}";
+
 }
